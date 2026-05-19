@@ -20,9 +20,6 @@ The installation instructions assume that the installation is done on a Windows 
   - Add the path to that directory to your user's _Path_ environment variable.
 - schxslt:
   - Download the [Schematron processor schxslt](https://codeberg.org/SchXslt/schxslt) (schxslt-x.y.z-xslt-only.zip), extract the zip file and move the contents to an appropriate place.
-- XSpec (only needed for development):
-  - Download/clone the [unit testing framework XSpec](https://github.com/xspec/xspec/)
-  - Set the environment variable `XSPEC_HOME` to the location where XSpec is stored.
   
 ## Configuration of Morgana
 
@@ -54,10 +51,11 @@ Customize `morgana-config.xml`:
 
 ## Configuration check
 
-To check your configuration, run batch file `print-configuration.bat` in folder `scripts` from the _root directory_ of the working tree of your local repository:
+To check your configuration, run batch file `print-configuration.bat`, located in the [scripts folder](/scripts):
+
 
 ```bat
-scripts\print-configuration.bat
+print-configuration.bat
 ```
 
 The output will show the versions of the applications needed by the sripts.
@@ -67,14 +65,14 @@ The output will show the versions of the applications needed by the sripts.
 
 ## Usage
 
-The usage instructions assume that the application is used on a Windows computer.
+The usage instructions assume that the application is used on a Windows computer. It does not matter from which folder the scripts are run. In the examples below, the scripts are run from the script folder.
 
 ### Adding/updating a single codelist's publication details
 
-To update the publication details of a genericode code list, run batch file `update-publication-details.bat` in folder `scripts` from the _root directory_ of the working tree of your local repository:
+To update the publication details of a genericode code list, run batch file `update-publication-details.bat`, located in the [scripts folder](/scripts)::
 
 ```bat
-scripts\update-publication-details.bat "C:\path\to\codelist.gc" https://example.org/codelistregister/subregister/
+update-publication-details.bat "C:\path\to\codelist.gc" https://example.org/codelistregister/subregister/
 ```
 
 > [!CAUTION]
@@ -82,10 +80,10 @@ scripts\update-publication-details.bat "C:\path\to\codelist.gc" https://example.
 
 ### Generating a code list register site
 
-To generate a whole code list register site, run batch file `generate-code-list-register-site.bat` in folder `scripts`from the _root directory_ of the working tree of your local repository:
+To generate a whole code list register site, run batch file `generate-code-list-register-site.bat`, located in the [scripts folder](/scripts)::
 
 ```bat
-scripts\generate-code-list-register-site.bat "C:\path\to\local\copy\of\codelisteregister" "https://example.org/codelistregister/" "C:\path\to\report.xml"
+generate-code-list-register-site.bat "C:\path\to\local\copy\of\codelisteregister" "https://example.org/codelistregister/" "C:\path\to\report.xml"
 ```
 
 > [!CAUTION]
@@ -96,25 +94,30 @@ The generated report will contain additional information, such as the validation
 If you want to overwrite existing CSV, HTML and Atom encodings of the code list versions, invoke the batch file as follows:
 
 ```bat
-scripts\generate-code-list-register-site.bat "C:\path\to\local\copy\of\codelisteregister" "https://example.org/codelistregister/" "C:\path\to\report.xml" true
+generate-code-list-register-site.bat "C:\path\to\local\copy\of\codelisteregister" "https://example.org/codelistregister/" "C:\path\to\report.xml" true
 ```
 
 Run the batch file without arguments to see all the options:
 
 ```bat
-scripts\generate-code-list-register-site.bat
+generate-code-list-register-site.bat
 ```
 
 ## Development
+
+### Installing XSpec
+
+- Download/clone the [unit testing framework XSpec](https://github.com/xspec/xspec/)
+- Set the environment variable `XSPEC_HOME` to the location where XSpec is stored.
 
 ### Running the tests
 
 The XSLT stylesheets are tested using [XSpec](https://github.com/xspec/xspec/), a unit test and behaviour-driven development (BDD) framework for XSLT, XQuery, and Schematron.
 
-On Windows, the XSpec XSLT tests can be run using the batch files in the [scripts folder](/scripts). Run the batch files from the _root directory_ of the working tree of your local repository, for instance:
+On Windows, the XSpec XSLT tests can be run using batch file `run-xslt-tests.bat` in the [scripts folder](/scripts).
 
 ```bat
-scripts\run-xslt-tests.bat
+run-xslt-tests.bat
 ```
 
 ## About the underlying standards and tools
