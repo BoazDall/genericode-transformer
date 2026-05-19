@@ -1,53 +1,60 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
 rem Start with clearing the ERRORLEVEL back to 0, in case an error occurred during a previous execution of this batch file
 rem See also https://ss64.com/nt/errorlevel.html
 (call )
 
-rem The only logical logical operator directly supported by IF is NOT, 
-rem so do not combine all conditions in one expression by writing OR, see also https://ss64.com/nt/if.html
-rem Do NOT use parentheses around the goto command, see also https://ss64.com/nt/goto.html
 if "%~1" == "" goto displayUsageMessage
 if "%~2" == "" goto displayUsageMessage
 
-(call Morgana 2>&1) | FIND /I "MorganaXProc-III" >NUL
-if %ERRORLEVEL% EQU 1 goto displayMessageMorgana
+set "gcFile=%~1"
+set "codeListSubregisterUri=%~2"
+set "addRdfAsAlternateFormat=true"
+if not "%~3" == "" set "addRdfAsAlternateFormat=%~3"
 
-setlocal
+set "projectRoot=%~DP0.."
+set "morganaConfig=%projectRoot%\local-scripts\morgana-config.xml"
+set "pipeline=%projectRoot%\src\main\xml\xproc\add-publication-details-to-gc.xpl"
+
+where /Q Morgana
+if %errorlevel% geq 1 goto displayMessageMorgana
+
+if not exist "%morganaConfig%" goto displayMessageMorganaConfig
+
+echo:
 echo Arguments set:
-echo ^<file^>                              %~1
-echo ^<codeListSubregisterUri^>            %~2
-if "%~3" == "" (
-	set add_rdf_as_alternate_format=true
-) else (
-	set add_rdf_as_alternate_format=%~3
-)
-echo ^<add_rdf_as_alternate_format^>       %add_rdf_as_alternate_format%
+echo   file                         %gcFile%
+echo   code-list-subregister-uri    %codeListSubregisterUri%
+echo   add-rdf-as-alternate-format  %addRdfAsAlternateFormat%
+echo:
 
-rem Check arguments
-if not exist "%~1" echo "%~1" does not exist & goto displayUsageMessage
+call Morgana -config="%morganaConfig%" "%pipeline%" -option:gc-file-path="%gcFile%" -option:code-list-subregister-uri="%codeListSubregisterUri%" -option:add-csv-as-alternate-format=true -option:add-rdf-as-alternate-format=%addRdfAsAlternateFormat%
 
-call Morgana -config=local-scripts\morgana-config.xml ^
-src\main\xml\xproc\add-publication-details-to-gc.xpl ^
--option:gc-file-path="%~1" ^
--option:code-list-subregister-uri="%~2" ^
--option:add-csv-as-alternate-format=true ^
--option:add-rdf-as-alternate-format=%add_rdf_as_alternate_format%
+echo Morgana exit code: %errorlevel%
 
-echo Exit code: %ERRORLEVEL%
-exit /B %ERRORLEVEL%
-goto:eof
+endlocal
+exit /B %errorlevel%
 
 :displayUsageMessage
-	echo:
-	echo Usage: %~nx0 ^<file^> ^<codeListSubregisterUri^> ^<addRdfAsAlternateFormat^>
-	echo:
-	echo     file                                  genericode file path (note: this file will be UPDATED by running this script)
-	echo     codeListSubregisterUri                first part of the retrieval location URIs, e.g. https://example.org/codelistregister/subregister/
-	echo     addRdfAsAlternateFormat               true ^(default^) or false
-	echo:
-goto:eof
+    echo:
+    echo Usage: %~nx0 gc-file code-list-subregister-uri [add-rdf-as-alternate-format]
+    echo:
+    echo     gc-file                        genericode file path (note: this file will be UPDATED by running this script)
+    echo     code-list-subregister-uri      first part of the retrieval location URIs
+    echo                                    E.g. "https://example.org/codelistregister/subregister/"
+    echo     add-rdf-as-alternate-format    true ^(default^) or false
+    echo:
+    endlocal
+    exit /B 1
 
 :displayMessageMorgana
-	echo Morgana was not found, please install it and try again.
-	echo Use scripts\print-configuration.bat to check your configuration.
-goto:eof
+    echo Morgana was not found, please install it and try again.
+    echo Use print-configuration.bat to check your configuration.
+    endlocal
+    exit /B 1
+
+:displayMessageMorganaConfig
+    echo Morgana configuration file not found: %morganaConfig%
+    endlocal
+    exit /B 1

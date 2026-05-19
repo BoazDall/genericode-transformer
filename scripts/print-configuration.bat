@@ -1,9 +1,14 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+set "projectRoot=%~DP0.."
+set "morganaConfig=%projectRoot%\local-scripts\morgana-config.xml"
+
 chcp 65001 >NUL
 echo:
 echo Check Java
 echo ----------
-call %JAVA_HOME%\bin\java.exe --version
+call "%JAVA_HOME%\bin\java.exe" --version
 echo:
 echo Check AsciidoctorJ
 echo ------------------
@@ -11,11 +16,11 @@ call asciidoctorj --version
 echo:
 echo Check Morgana
 echo -------------
-call Morgana -config=local-scripts\morgana-config.xml src\main\xml\xproc\retrieve-processor-properties.xpl -silent
+call Morgana -config="%morganaConfig%" "%projectRoot%\src\main\xml\xproc\retrieve-processor-properties.xpl" -silent
 echo:
 echo Check Saxon
 echo -----------
-call %JAVA_HOME%\bin\java.exe -cp %SAXON_CP% net.sf.saxon.Transform -t -?
+call "%JAVA_HOME%\bin\java.exe" -cp "%SAXON_CP%" net.sf.saxon.Transform -t -?
 echo:
 echo Check XSpec
 echo -----------
@@ -29,3 +34,5 @@ powershell -Command "$xml = [xml](Get-Content '%XSPEC_HOME%\pom.xml'); $nsManage
 chcp 65001 >NUL
 echo:
 echo Directories where your operating system searches for executable files: %PATH%
+
+endlocal
