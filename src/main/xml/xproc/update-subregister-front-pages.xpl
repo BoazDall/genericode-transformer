@@ -72,7 +72,7 @@
             select="$input-directory-urified" />
         <p:with-option
             name="include-filter"
-            select="('.*\.html', '[^/]+/v[0-9]+\.[0-9]+\.[0-9]+\.[^/]+\.atom')" />
+            select="('.*\.html', '.*\.atom')" />
         <p:with-option
             name="max-depth"
             select="'3'" />
@@ -92,9 +92,10 @@
         <p:output
             port="report"
             primary="false"
-            content-types="xml">
+            content-types="xml"
+            sequence="true">
             <p:pipe
-                step="create-and-store-feed"
+                step="store-and-validate-feed-if-updated"
                 port="report" />
         </p:output>
 
@@ -106,6 +107,10 @@
             use-when="$debug">
         </p:store>
 
+        <p:variable
+            name="directory-name"
+            select="/c:directory/@name" />
+            
         <!-- directory-uri will be absolute (cannot be seen in the debug files stored in the debug step above) -->
         <p:variable
             name="directory-uri"
@@ -122,36 +127,36 @@
 
         <p:variable
             name="overview-file-uri"
-            select="base-uri(/c:directory/c:file[@name eq $overview-file-name])" />
+            select="base-uri(/c:directory) || $overview-file-name" />
+
+        <p:variable
+            name="feed-file-name"
+            select="'feed.atom'" />
+            
+        <p:variable
+            name="feed-exists"
+            select="exists(/c:directory/c:file[@name eq $feed-file-name])" />
+
+        <p:variable
+            name="feed-file-uri"
+            select="base-uri(/c:directory) || $feed-file-name" />
+            
+        <p:identity 
+            message="Start processing subregister {p:iteration-position()}: {$directory-name}" />
 
         <p:load
             name="load-index-html"
             message="Load {$overview-file-uri}"
             href="{$overview-file-uri}" />
             
-        <p:group name="create-and-store-feed">
+        <p:group name="create-feed">
         
-            <p:output
-                port="report"
-                primary="false"
-                content-types="xml">
+            <p:output port="result">
                 <p:pipe
-                    step="update-atom-validation-reports-metadata"
+                    step="set-feed-properties"
                     port="result" />
             </p:output>
-
-            <p:variable
-                name="feed-file-name"
-                select="'feed.atom'" />
-
-            <p:variable
-                name="feed-file-uri"
-                select="base-uri(/c:directory) || $feed-file-name">
-                <p:pipe
-                    step="process-directory-list-subregister"
-                    port="current" />
-            </p:variable>
-
+        
             <p:xslt
                 name="convert-index-html-to-feed"
                 message="Convert index.html to empty feed"
@@ -233,94 +238,245 @@
                     href="../xslt/update-feed-updated.xsl" />
             </p:xslt>
 
-            <p:set-properties>
+            <p:set-properties
+                name="set-feed-properties"
+                message="Set base-uri property of feed to {$feed-file-uri}">
                 <p:with-option
                     name="properties"
                     select="map{ 'base-uri' : $feed-file-uri}" />
             </p:set-properties>
+        
+        </p:group>
+        
+        <p:group name="store-and-validate-feed-if-updated">
+        
+            <p:output
+                port="report"
+                primary="false"
+                content-types="xml"
+                sequence="true">
+                <p:pipe
+                    step="keep-existing-or-store-new-feed"
+                    port="report" />
+            </p:output>
             
-            <!-- Note: opposed to most other p:store steps, this step is part of the production flow,
-            it's purpose is not debugging. -->
-            <p:store
-                name="store-feed"
-                message="Store Atom feed {$feed-file-uri}"
-                href="{$feed-file-uri}"
-                serialization="map { 'indent': true() }" />
-
-            <!-- 
-            If the RELAX NG validation fails:
-            linearize the Atom feed to find the location indicated by
-            xvrl:location/@line and xvrl:location/@column
-            in the validation report  -->
-            <p:validate-with-relax-ng
-                name="validate-atom-feed-relax-ng"
-                message="Validate Atom feed with RELAX NG schema">
-                <p:with-input
-                    port="schema"
-                    href="../schemas/relaxng/atom.rnc" />
-            <p:with-option
-                    name="assert-valid"
-                    select="false()" />
-            </p:validate-with-relax-ng>
-
-            <p:validate-with-schematron
-                name="validate-atom-feed-schematron"
-                message="Validate Atom feed with Schematron schema">
-                <p:with-input
-                    port="schema"
-                    href="../schemas/schematron/atom.sch" />
-                <p:with-option
-                    name="assert-valid"
-                    select="false()" />
-                <!--  TODO find a good way to reuse step validate-with-schematron-xvrl from genericode-validator -->
-                <p:with-option
-                    name="report-format"
-                    select="'xvrl'" />
-            </p:validate-with-schematron>
-            
-            <p:wrap-sequence
-                name="collect-atom-validation-reports"
-                message="Collect all Atom validation reports">
-                <p:with-input port="source">
-                    <p:pipe
-                        step="validate-atom-feed-relax-ng"
-                        port="report" />
-                    <p:pipe
-                        step="validate-atom-feed-schematron"
-                        port="report" />
-                </p:with-input>
-                <p:with-option
-                    name="wrapper"
-                    select="QName('http://www.xproc.org/ns/xvrl', 'reports')" />
-            </p:wrap-sequence>
+            <p:choose name="determine-are-feeds-equal">
+                <p:when
+                    test="$feed-exists"
+                    name="determine-are-feeds-equal-feed-exists">
+                    
+                    <p:output
+                    	port="result"
+                    	primary="true"
+                    	content-types="xml">
+                    	<p:pipe
+                    		step="compare-existing-to-new-feed"
+                    		port="result" />
+                    </p:output>
+                
+                    <p:load
+                        name="load-feed"
+                        message="Load existing feed from {$feed-file-uri}"
+                        href="{$feed-file-uri}" />
+                    
+                    <p:delete
+                        name="delete-updated-element-from-existing-feed"
+                        message="Delete date of last update (only for comparing) from existing feed"
+                        match="atom:feed/atom:updated" >
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="load-feed"
+                                port="result" />
+                        </p:with-input>
+                    </p:delete>
+                    
+                    <p:delete
+                        name="delete-updated-element-from-new-feed"
+                        message="Delete date of last update (only for comparing) from new feed"
+                        match="atom:feed/atom:updated">
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="create-feed"
+                                port="result" />
+                        </p:with-input>
+                    </p:delete>
+                    
+                    <p:compare
+                        name="compare-existing-to-new-feed"
+                        message="Compare contents of existing feed to newly generated feed (disregarding the dates of last update of both feeds)">
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="delete-updated-element-from-existing-feed"
+                                port="result" />
+                        </p:with-input>
+                        <p:with-input port="alternate">
+                            <p:pipe
+                                step="delete-updated-element-from-new-feed"
+                                port="result" />
+                        </p:with-input>
+                        <p:with-option
+                            name="method"
+                            select="'deep-equal'" />
+                    </p:compare>
+                    
+                </p:when>
+                
+                <p:otherwise name="determine-are-feeds-equal-feed-does-not-exist">
+                    <p:output
+                        port="result"
+                        primary="true"
+                        content-types="xml">
+                        <p:pipe
+                            step="create-false-result"
+                            port="result" />
+                    </p:output>
+                    
+                    <p:identity
+                        name="create-false-result"
+                        message="No existing feed, return false result">
+                        <p:with-input port="source">
+                            <!-- Use same structure as the primary output of the alternate subpipeline determine-are-feeds-equal-feed-exists, 
+                            which is the output of the p:compare step compare-existing-to-new-feed. -->
+                            <p:inline>
+                                <c:result>false</c:result>
+                            </p:inline>
+                        </p:with-input>
+                    </p:identity>
+                </p:otherwise>
+            </p:choose>
             
             <p:variable
-                name="is-atom-valid"
-                select="not(exists(/xvrl:reports/xvrl:report/xvrl:digest[@valid eq 'false']))" />
+                name="new-feed-is-equal-to-existing-feed"
+                select="xsd:boolean(/c:result/text())" />
             
-            <p:insert
-                name="update-atom-validation-reports-metadata"
-                message="{if ($is-atom-valid) then $feed-file-uri || ' is valid' else ('WARNING ' || $feed-file-uri || ' is NOT valid')}">
-                <p:with-input port="insertion">
-                    <p:inline exclude-inline-prefixes="#all">
-                        <metadata xmlns="http://www.xproc.org/ns/xvrl">
-                            <document href="{$feed-file-uri}"/>
-                        </metadata>
-                        <digest xmlns="http://www.xproc.org/ns/xvrl" valid="{$is-atom-valid}" />
-                    </p:inline>
-                </p:with-input>
-                <p:with-option
-                    name="match"
-                    select="'/xvrl:reports'" />
-                <p:with-option
-                    name="position"
-                    select="'first-child'" />
-            </p:insert>
+            <p:choose name="keep-existing-or-store-new-feed">
+                <p:when
+                    test="$new-feed-is-equal-to-existing-feed"
+                    name="keep-existing-feed">
+                    
+                    <p:output
+                        port="report"
+                        primary="false"
+                        content-types="xml"
+                        sequence="true">
+                        <p:empty />
+                    </p:output>
+                    
+                    <p:sink
+                        name="sink-new-feed"
+                        message="Discard newly generated Atom feed as the feed was not modified significantly">
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="create-feed"
+                                port="result" />
+                        </p:with-input>
+                    </p:sink>
+                    
+                </p:when>
+                
+                <p:otherwise name="store-and-validate-new-feed">
+                
+                    <p:output
+                        port="report"
+                        primary="false"
+                        content-types="xml"
+                        sequence="true">
+                        <p:pipe
+                            step="update-atom-validation-reports-metadata"
+                            port="result" />
+                    </p:output>
+                
+                    <!-- Note: opposed to most other p:store steps, this step is part of the production flow,
+                    it's purpose is not debugging. -->
+                    <p:store
+                        name="store-new-feed"
+                        message="Store newly generated Atom feed as the feed was modified significantly: {$feed-file-uri}"
+                        href="{$feed-file-uri}"
+                        serialization="map { 'indent': true() }">
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="create-feed"
+                                port="result" />
+                        </p:with-input>
+                    </p:store>
+        
+                    <!-- 
+                    If the RELAX NG validation fails:
+                    linearize the Atom feed to find the location indicated by
+                    xvrl:location/@line and xvrl:location/@column
+                    in the validation report  -->
+                    <p:validate-with-relax-ng
+                        name="validate-atom-feed-relax-ng"
+                        message="Validate Atom feed with RELAX NG schema">
+                        <p:with-input
+                            port="schema"
+                            href="../schemas/relaxng/atom.rnc" />
+                    <p:with-option
+                            name="assert-valid"
+                            select="false()" />
+                    </p:validate-with-relax-ng>
+        
+                    <p:validate-with-schematron
+                        name="validate-atom-feed-schematron"
+                        message="Validate Atom feed with Schematron schema">
+                        <p:with-input
+                            port="schema"
+                            href="../schemas/schematron/atom.sch" />
+                        <p:with-option
+                            name="assert-valid"
+                            select="false()" />
+                        <!--  TODO find a good way to reuse step validate-with-schematron-xvrl from genericode-validator -->
+                        <p:with-option
+                            name="report-format"
+                            select="'xvrl'" />
+                    </p:validate-with-schematron>
+                    
+                    <p:wrap-sequence
+                        name="collect-atom-validation-reports"
+                        message="Collect all Atom validation reports">
+                        <p:with-input port="source">
+                            <p:pipe
+                                step="validate-atom-feed-relax-ng"
+                                port="report" />
+                            <p:pipe
+                                step="validate-atom-feed-schematron"
+                                port="report" />
+                        </p:with-input>
+                        <p:with-option
+                            name="wrapper"
+                            select="QName('http://www.xproc.org/ns/xvrl', 'reports')" />
+                    </p:wrap-sequence>
+                    
+                    <p:variable
+                        name="is-atom-valid"
+                        select="not(exists(/xvrl:reports/xvrl:report/xvrl:digest[@valid eq 'false']))" />
+                    
+                    <p:insert
+                        name="update-atom-validation-reports-metadata"
+                        message="{if ($is-atom-valid) then $feed-file-uri || ' is valid' else ('WARNING ' || $feed-file-uri || ' is NOT valid')}">
+                        <p:with-input port="insertion">
+                            <p:inline exclude-inline-prefixes="#all">
+                                <metadata xmlns="http://www.xproc.org/ns/xvrl">
+                                    <document href="{$feed-file-uri}"/>
+                                </metadata>
+                                <digest xmlns="http://www.xproc.org/ns/xvrl" valid="{$is-atom-valid}" />
+                            </p:inline>
+                        </p:with-input>
+                        <p:with-option
+                            name="match"
+                            select="'/xvrl:reports'" />
+                        <p:with-option
+                            name="position"
+                            select="'first-child'" />
+                    </p:insert>
+                
+                </p:otherwise>
+            </p:choose>
             
         </p:group>
         
         <p:group name="update-overview-file">
-
+        
             <p:variable
                 name="lang"
                 select="/xhtml:html/@lang">
