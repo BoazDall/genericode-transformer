@@ -81,6 +81,11 @@
             </style>
         </xsl:copy>
     </xsl:template>
+    
+    <xsl:template match="xhtml:head/xhtml:meta[@name eq 'generator']">
+        <!-- Do nothing: do not copy the meta-element stating the software that generated the page,
+        to avoid changes in HTML pages only due to a different version of the software used. -->
+    </xsl:template>
 
     <xsl:template match="xhtml:div[@id='header']">
         <header class="ds-header">
