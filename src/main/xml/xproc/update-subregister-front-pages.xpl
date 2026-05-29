@@ -277,7 +277,8 @@
                     <p:load
                         name="load-feed"
                         message="Load existing feed from {$feed-file-uri}"
-                        href="{$feed-file-uri}" />
+                        href="{$feed-file-uri}"
+                        content-type="application/atom+xml" />
                     
                     <p:delete
                         name="delete-updated-element-from-existing-feed"
