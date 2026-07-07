@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description
+    xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    stylesheet="../../../main/xml/xslt/create-next-code-list-version.xsl">
+
+    <x:param
+        name="codeListVersionNumber"
+        select="'1.1.0'" />
+        
+    <x:param
+        name="codeListVersionUuid"
+        select="'5d0a494e-e280-44ec-a799-deb532a33d79'" />
+        
+    <x:scenario label="When a new version is generated based on v1.0.0.somecode.gc">
+        <x:context href="../data/create-next-code-list-version/v1.0.0.somecode.gc?strip-space=yes" />
+        <x:expect
+            label="the output must equal v1.1.0.somecode.gc"
+            href="../data/create-next-code-list-version/v1.1.0.somecode.gc?strip-space=yes" />
+    </x:scenario>
+
+</x:description>
