@@ -66,7 +66,11 @@
             <body>
                 <header class="ds-header">
                     <div class="ds-container">
-                        <xsl:call-template name="generateDsLogoTitle" />
+                        <xsl:call-template name="generateDsLogoTitle">
+                            <xsl:with-param
+                                name="depth"
+                                select="2" />
+                        </xsl:call-template>
                         <h1>
                             <xsl:value-of select="$codeListName" />
                         </h1>

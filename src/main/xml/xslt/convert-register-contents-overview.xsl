@@ -90,7 +90,11 @@
     <xsl:template match="xhtml:div[@id='header']">
         <header class="ds-header">
             <div class="ds-container">
-                <xsl:call-template name="generateDsLogoTitle" />
+                <xsl:call-template name="generateDsLogoTitle">
+                    <xsl:with-param
+                        name="depth"
+                        select="$level - 1" />
+                </xsl:call-template>
                 <xsl:copy-of select="xhtml:h1" />
                 <p class="manchet">
                     <!-- Preamble = content between the end of the document header and the first section title in the document body,
