@@ -4,12 +4,12 @@
     xmlns="http://www.w3.org/1999/xhtml"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     exclude-result-prefixes="#all">
-    
+
     <!-- 
     Stylesheet with common functionality for generating HTML pages,
     to be included in other stylesheets that generate HTML pages.
     -->
-    
+
     <xsl:include href="common-l10n.xsl" />
 
     <xsl:variable
@@ -19,7 +19,7 @@
     <xsl:variable
         name="designsystemUrl"
         select="'https://cdn.dataforsyningen.dk/assets/designsystem/v' || $designsystemVersion" />
-        
+
     <xsl:variable
         name="exitSiteIcon"
         select="document($designsystemUrl || '/icons/exitsite.svg')" />
@@ -28,28 +28,43 @@
         name="mailIcon"
         select="document($designsystemUrl || '/icons/mail.svg')" />
 
-	<xsl:variable
-		name="feedIcon"
-		select="document($designsystemUrl || '/icons/some-feed.svg')" />
+    <xsl:variable
+        name="feedIcon"
+        select="document($designsystemUrl || '/icons/some-feed.svg')" />
 
     <!-- Prerequisite: DSLogoTitle has been imported from designsystem.js in the stylesheet that includes this stylesheet -->
     <xsl:template name="generateDsLogoTitle">
-        <ds-logo-title>
-            <xsl:attribute name="title">
-                <xsl:call-template name="localizedMessage">
-                    <xsl:with-param
-                        name="id"
-                        select="'registername'" />
-                </xsl:call-template>
-            </xsl:attribute>
-            <xsl:attribute name="byline">
-                <xsl:call-template name="localizedMessage">
-                    <xsl:with-param
-                        name="id"
-                        select="'registerowner'" />
-                </xsl:call-template>
-            </xsl:attribute>
-        </ds-logo-title>
+        <xsl:param
+            name="depth"
+            select="0" />
+        <xsl:variable name="homelink">
+            <xsl:choose>
+                <!-- root case to be consistent even though href point to current page -->
+                <xsl:when test="$depth le 0">./index.html</xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="string-join((for $i in 1 to $depth return '../'), '')"/>
+                    <xsl:text>index.html</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <a href="{$homelink}" class="ds-logo-title-link">
+            <ds-logo-title>
+                <xsl:attribute name="title">
+                    <xsl:call-template name="localizedMessage">
+                        <xsl:with-param
+                            name="id"
+                            select="'registername'" />
+                    </xsl:call-template>
+                </xsl:attribute>
+                <xsl:attribute name="byline">
+                    <xsl:call-template name="localizedMessage">
+                        <xsl:with-param
+                            name="id"
+                            select="'registerowner'" />
+                    </xsl:call-template>
+                </xsl:attribute>
+            </ds-logo-title>
+        </a>
     </xsl:template>
 
     <!-- Prerequisite: DSLogoTitle has been imported from designsystem.js in the stylesheet that includes this stylesheet -->
@@ -96,15 +111,15 @@
         </footer>
     </xsl:template>
 
-	<xsl:template name="feedLink">
-		<a href="./feed.atom">
-			<xsl:call-template name="localizedMessage">
-				<xsl:with-param
-					name="id"
-					select="'feedtextlink'" />
-			</xsl:call-template>
+    <xsl:template name="feedLink">
+        <a href="./feed.atom">
+            <xsl:call-template name="localizedMessage">
+                <xsl:with-param
+                    name="id"
+                    select="'feedtextlink'" />
+            </xsl:call-template>
             <xsl:copy-of select="$feedIcon" />
-		</a>
-	</xsl:template>
+        </a>
+    </xsl:template>
 
 </xsl:stylesheet>
