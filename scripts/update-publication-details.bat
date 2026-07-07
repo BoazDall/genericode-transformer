@@ -24,7 +24,7 @@ if not exist "%morganaConfig%" goto displayMessageMorganaConfig
 
 echo:
 echo Arguments set:
-echo   file                         %gcFile%
+echo   gc-file                      %gcFile%
 echo   code-list-subregister-uri    %codeListSubregisterUri%
 echo   add-rdf-as-alternate-format  %addRdfAsAlternateFormat%
 echo:

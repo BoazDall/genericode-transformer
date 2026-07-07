@@ -47,7 +47,8 @@
     <p:load
         name="load-gc-file"
         message="Load {$gc-file-path-urified}"
-        href="{$gc-file-path-urified}" />
+        href="{$gc-file-path-urified}"
+        content-type="application/xml" />
     
     <!-- Normalizing namespaces ensures a uniform notation of namespace declararations 
     in the genericode files in the code list register.
