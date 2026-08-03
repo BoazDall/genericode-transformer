@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description
+    xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    stylesheet="../../../main/xml/xslt/create-first-code-list-version.xsl">
+
+    <x:param
+        name="codeListShortName"
+        select="'anothercode'" />
+    <x:param
+        name="codeListUuid"
+        select="'c36bec51-e83a-4c34-9026-61e135255b18'" />
+    <x:param
+        name="codeListVersionUuid"
+        select="'c38d10ab-e270-453d-8de4-956a574217c5'" />
+    <x:param
+        name="codeListVersionNumber"
+        select="'0.1.0'" />
+
+    <x:scenario label='When code list "anothercode" is created'>
+        <x:call template="xsl:initial-template">
+        </x:call>
+        <x:expect
+            label="the code list must equal v0.1.0.anothercode.gc"
+            href="../data/create-first-code-list-version/v0.1.0.anothercode.gc?strip-space=yes" />
+    </x:scenario>
+
+</x:description>
