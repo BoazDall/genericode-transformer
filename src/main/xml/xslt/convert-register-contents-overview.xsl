@@ -33,7 +33,12 @@
         name="level"
         required="true"
         as="xsd:integer" />
-    
+
+    <xsl:param
+        name="code-list-subregister-uri"
+        required="false"
+        as="xsd:string?" />
+
     <!-- Set required to false for easier testing of this stylesheet -->
     <xsl:param
         name="registerContentsElement"
@@ -42,6 +47,10 @@
     <xsl:variable
         name="lang"
         select="/xhtml:html/@lang" />
+    
+    <xsl:variable name="registerRootName">
+        <xsl:call-template name="get-register-root-name" />
+    </xsl:variable>
 
     <xsl:template match="xhtml:head">
         <xsl:copy>
@@ -78,6 +87,7 @@
                 /* No extra top margin for the top level sections */
                 section + section, section section {margin-top: var(--space-md)}
                 .warning *{color: var(--warning);font-weight: 500}
+                .ds-breadcrumb-separator svg { width: 0.75rem; height: 0.75rem; vertical-align: middle; }
             </style>
         </xsl:copy>
     </xsl:template>
@@ -102,6 +112,28 @@
                     <xsl:apply-templates select="//xhtml:div[@id eq 'preamble']" />
                 </p>
             </div>
+            <xsl:choose>
+                <xsl:when test="$level eq 1">
+                    <nav class="ds-nav ds-container ds-pt-xxs ds-pb-xxs">
+                        <a class="active" href="./index.html">
+                            <xsl:value-of select="$registerRootName" />
+                        </a>
+                    </nav>
+                </xsl:when>
+                <xsl:otherwise>
+                    <nav class="ds-nav ds-container ds-pt-xxs ds-pb-xxs">
+                        <a class="active" href="../index.html">
+                            <xsl:value-of select="$registerRootName" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a href="../index.html">
+                            <xsl:variable name="segments" select="tokenize($code-list-subregister-uri, '/')" />
+                            <xsl:variable name="rootIndex" select="index-of($segments, lower-case($registerRootName))" />
+                            <xsl:value-of select="$segments[$rootIndex + 1]" />
+                        </a>
+                    </nav>
+                </xsl:otherwise>
+            </xsl:choose>
         </header>
     </xsl:template>
 
