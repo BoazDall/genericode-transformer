@@ -32,6 +32,10 @@
         name="feedIcon"
         select="document($designsystemUrl || '/icons/some-feed.svg')" />
 
+    <xsl:variable
+        name="arrowSingleRightIcon"
+        select="document($designsystemUrl || '/icons/arrow-single-right.svg')" />
+
     <!-- Prerequisite: DSLogoTitle has been imported from designsystem.js in the stylesheet that includes this stylesheet -->
     <xsl:template name="generateDsLogoTitle">
         <xsl:param
@@ -120,6 +124,20 @@
             </xsl:call-template>
             <xsl:copy-of select="$feedIcon" />
         </a>
+    </xsl:template>
+
+    <xsl:template name="get-register-root-name">
+        <xsl:call-template name="localizedMessage">
+            <xsl:with-param
+                name="id"
+                select="'registername'" />
+        </xsl:call-template>
+    </xsl:template>
+
+    <xsl:template name="breadcrumbSeperator">
+        <span class="ds-breadcrumb-separator">
+            <xsl:copy-of select="$arrowSingleRightIcon" />
+        </span>
     </xsl:template>
 
 </xsl:stylesheet>

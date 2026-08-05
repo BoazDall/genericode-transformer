@@ -139,6 +139,10 @@
             select="/gc:CodeList/Identification/ShortName" />
 
         <p:variable
+            name="location-uri-latest-version"
+            select="/gc:CodeList/Identification/LocationUri" />
+
+        <p:variable
             name="version-html-element"
             select="/">
             <p:pipe
@@ -158,7 +162,7 @@
                 select="'start-template'" />
             <p:with-option
                 name="parameters"
-                select="map {'lang' : $lang-latest-version, 'codeListName' : $name-latest-version, 'versionElement' : $version-html-element }" />
+                select="map {'lang' : $lang-latest-version, 'codeListName' : $name-latest-version, 'versionElement' : $version-html-element, 'locationUri' : $location-uri-latest-version }" />
         </p:xslt>
 
         <!-- Note: opposed to the other p:store steps, this step is part of the production flow,

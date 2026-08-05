@@ -53,6 +53,10 @@
         name="lang"
         select="/gc:CodeList/Annotation/Description/dcterms:language" />
 
+    <xsl:variable name="registerRootName">
+        <xsl:call-template name="get-register-root-name" />
+    </xsl:variable>
+
     <xsl:template match="/">
         <html>
             <xsl:attribute
@@ -118,6 +122,8 @@
                     /* Custom styles */
                     #downloadsection a[role="button"]{width: 6rem; margin: var(--space-xs); min-width: 44px;
                     min-height: 44px;}
+                    .ds-breadcrumb-separator svg { width: 0.75rem; height: 0.75rem; vertical-align: middle; }
+
                 </style>
             </head>
             <body>
@@ -132,6 +138,25 @@
                             <xsl:value-of select="gc:CodeList/Identification/ShortName" />
                         </h1>
                     </div>
+                    <nav class="ds-nav ds-container ds-pt-xxs ds-pb-xxs">
+                        <a href="../../index.html">
+                            <xsl:value-of select="$registerRootName" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a href="../index.html">
+                            <xsl:variable name="segments" select="tokenize(gc:CodeList/Identification/LocationUri, '/')" />
+                            <xsl:variable name="rootIndex" select="index-of($segments, lower-case($registerRootName))" />
+                            <xsl:value-of select="$segments[$rootIndex + 1]" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a href="./index.html">
+                            <xsl:value-of select="gc:CodeList/Identification/ShortName" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a class="active" href="{'v' || gc:CodeList/Identification/Version || '.' || gc:CodeList/Identification/ShortName || '.html'}">
+                            <xsl:value-of select="concat('v', gc:CodeList/Identification/Version)" />
+                        </a>
+                    </nav>
                 </header>
                 <main class="ds-container ds-pt-lg ds-pb-lg"><!-- Use same classes as on other HTML pages -->
                     <div class="ds-grid-2-1">

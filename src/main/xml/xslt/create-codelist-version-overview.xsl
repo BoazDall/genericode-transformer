@@ -29,10 +29,18 @@
         name="codeListName"
         required="true" />
 
+    <xsl:param
+        name="locationUri"
+        required="true" />
+
     <!-- Set required to false for easier testing of this stylesheet -->
     <xsl:param
         name="versionElement"
         required="false" />
+
+    <xsl:variable name="registerRootName">
+        <xsl:call-template name="get-register-root-name" />
+    </xsl:variable>
         
     <!-- Invoke this template to use this stylesheet -->
     <xsl:template name="start-template">
@@ -62,6 +70,9 @@
                     customElements.define('ds-logo', DSLogo)
                     customElements.define('ds-logo-title', DSLogoTitle)
                 </script>
+                <style>
+                    .ds-breadcrumb-separator svg { width: 0.75rem; height: 0.75rem; vertical-align: middle; }
+                </style>
             </head>
             <body>
                 <header class="ds-header">
@@ -85,6 +96,21 @@
                             <xsl:text>.</xsl:text>
                         </p>
                     </div>
+                    <nav class="ds-nav ds-container ds-pt-xxs ds-pb-xxs">
+                        <a href="../../index.html">
+                            <xsl:value-of select="$registerRootName" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a href="../index.html">
+                            <xsl:variable name="segments" select="tokenize($locationUri, '/')" />
+                            <xsl:variable name="rootIndex" select="index-of($segments, lower-case($registerRootName))" />
+                            <xsl:value-of select="$segments[$rootIndex + 1]" />
+                        </a>
+                        <xsl:call-template name="breadcrumbSeperator" />
+                        <a class="active" href="./index.html">
+                            <xsl:value-of select="$codeListName" />
+                        </a>
+                    </nav>
                 </header>
                 <main class="ds-container ds-pt-lg ds-pb-lg"><!-- Use same classes as on other HTML pages -->
                     <div class="ds-grid-1-2">

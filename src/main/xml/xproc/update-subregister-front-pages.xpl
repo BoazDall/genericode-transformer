@@ -514,7 +514,7 @@
             <p:variable
                 name="html-element"
                 select="/" />
-    
+
             <p:xslt
                 name="transform-code-list-overview-page"
                 message="Update code list version overview page"
@@ -529,17 +529,17 @@
                     href="../xslt/convert-register-contents-overview.xsl" />
                 <p:with-option
                     name="parameters"
-                    select="map {'level' : 2, 'registerContentsElement' : $html-element }" />
+                    select="map {'level' : 2, 'registerContentsElement' : $html-element, 'code-list-subregister-uri' : $code-list-subregister-uri }" />
             </p:xslt>
-    
+
             <!-- Note: opposed to most other p:store steps, this step is part of the production flow,
             it's purpose is not debugging.
             The original overview file is overwritten. -->
+
             <p:store
                 name="store-overview-file"
                 message="Overwrite overview file in {$overview-file-uri}"
                 href="{$overview-file-uri}" />
-            
         </p:group>
     </p:for-each>
     
@@ -555,7 +555,7 @@
             name="wrapper"
             select="QName('http://www.xproc.org/ns/xvrl', 'reports')" />
     </p:wrap-sequence>
-    
+
     <p:insert
         name="update-reports-subregisters-metadata"
         message="Update metadata for reports from all subregisters">
